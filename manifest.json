@@ -1,12 +1,12 @@
 {
   "name": "仕事検索メモ",
   "short_name": "仕事検索",
-  "description": "質問を入力・音声入力して、Google検索やChatGPTへ渡しやすくする仕事用アプリ",
+  "description": "質問を入力・音声入力して、ChatGPTへ渡しやすくする仕事用アプリ",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#1f2937",
+  "theme_color": "#0f172a",
   "orientation": "portrait-primary",
   "icons": [
     {
