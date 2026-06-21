@@ -2,7 +2,7 @@
   "name": "すぐ調べる",
   "short_name": "調べる",
   "description": "質問を入力・音声入力して、Google検索やコピーができる仕事用PWA",
-  "start_url": "./search_assistant_app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",
