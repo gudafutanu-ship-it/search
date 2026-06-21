@@ -83,7 +83,9 @@
   const q = $('question'), status = $('status'), historyList = $('historyList'), historyCount = $('historyCount');
   const KEY = 'quick_search_work_history_v1';
   let searchMode = 'normal';
-  let recognition = null, recognizing = false, finalTranscript = '';
+  let recognition = null, recognizing = false;
+  let speechBaseText = '';
+  let speechFinalParts = {};
 
   function setStatus(msg, type){ status.textContent = msg; status.className = 'status ' + (type || ''); }
   function normalizeText(text){ return (text || '').replace(/\u3000/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); }
@@ -133,16 +135,47 @@
   function setupSpeech(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR){ setStatus('このSafariでは音声認識が使えない場合があります。キーボードのマイク入力は使えます。','warn'); return; }
-    recognition = new SR(); recognition.lang='ja-JP'; recognition.continuous=true; recognition.interimResults=true;
-    recognition.onstart=()=>{recognizing=true; finalTranscript=q.value ? q.value + '\n' : ''; $('micBtn').textContent='■ 停止'; setStatus('音声入力中です。停止しても、サーチボタンを押すまで検索しません。','good');};
-    recognition.onresult=(event)=>{ let interim=''; for(let i=event.resultIndex;i<event.results.length;i++){ const t=event.results[i][0].transcript; if(event.results[i].isFinal) finalTranscript += t; else interim += t; } q.value = normalizeText(finalTranscript + interim); };
+    recognition = new SR();
+    recognition.lang='ja-JP';
+    recognition.continuous=true;
+    // iPhone Safariで1文字ずつ表示される感じを減らすため、途中結果は表示しません。
+    recognition.interimResults=false;
+    recognition.onstart=()=>{
+      recognizing=true;
+      // 新しい音声入力ごとに内部バッファを必ず空にします。
+      // 入力欄に文字が残っている場合だけ、その文字を土台として残します。
+      speechBaseText = normalizeText(q.value);
+      speechFinalParts = {};
+      $('micBtn').textContent='■ 停止';
+      setStatus('音声入力中です。話し終わったら停止、またはそのままサーチしてください。検索は自動では始まりません。','good');
+    };
+    recognition.onresult=(event)=>{
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        if(event.results[i].isFinal){
+          speechFinalParts[i] = event.results[i][0].transcript;
+        }
+      }
+      const spoken = Object.keys(speechFinalParts)
+        .sort((a,b)=>Number(a)-Number(b))
+        .map(k=>speechFinalParts[k])
+        .join('');
+      const merged = speechBaseText ? speechBaseText + '\n' + spoken : spoken;
+      q.value = normalizeText(merged);
+    };
     recognition.onerror=(e)=>{ setStatus('音声入力でエラーが出ました。Safariのマイク許可を確認してください。','bad'); };
     recognition.onend=()=>{ recognizing=false; $('micBtn').textContent='🎙️'; setStatus('音声入力を停止しました。必要なら手で修正してから検索してください。','good'); };
   }
 
   $('searchBtn').onclick = doSearch; $('copyBtn').onclick = copyText; $('saveBtn').onclick=()=>{ const t=getText(false); if(t){saveHistory(t); setStatus('履歴に保存しました。','good')}else setStatus('保存する内容を入力してください。','warn'); };
   $('cleanBtn').onclick=()=>{ const t=polish(q.value); if(t){q.value=t; setStatus('検索しやすい文章に少し整えました。','good')}else setStatus('整える内容を入力してください。','warn'); };
-  $('clearBtn').onclick=()=>{q.value=''; q.focus(); setStatus('入力欄を空にしました。','');};
+  $('clearBtn').onclick=()=>{
+    if(recognizing && recognition){ try{ recognition.stop(); }catch(e){} }
+    q.value='';
+    speechBaseText='';
+    speechFinalParts={};
+    q.focus();
+    setStatus('入力欄を空にしました。次の音声入力に前回の内容は混ざりません。','good');
+  };
   $('deleteHistoryBtn').onclick=()=>{ if(confirm('履歴をすべて削除しますか？')){ localStorage.removeItem(KEY); renderHistory(); setStatus('履歴を削除しました。','good'); } };
   $('normalMode').onclick=()=>{searchMode='normal'; $('normalMode').classList.add('on'); $('exactMode').classList.remove('on');};
   $('exactMode').onclick=()=>{searchMode='exact'; $('exactMode').classList.add('on'); $('normalMode').classList.remove('on');};
