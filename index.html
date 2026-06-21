@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172033">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="すぐ調べる">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>すぐ調べる</title>
+  <style>
+    :root{
+      --bg:#0f172a; --panel:#172033; --panel2:#1f2a44; --text:#eef3ff; --muted:#aeb9cf;
+      --accent:#5aa7ff; --accent2:#64d2a6; --danger:#ff7272; --line:rgba(255,255,255,.12);
+      --shadow:0 12px 32px rgba(0,0,0,.28); --radius:22px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;background:linear-gradient(180deg,#0d1425,#111827 50%,#0b1020);color:var(--text)}
+    body{padding:env(safe-area-inset-top) 14px calc(18px + env(safe-area-inset-bottom));}
+    .app{max-width:560px;margin:0 auto;padding:12px 0 24px}
+    header{padding:12px 4px 14px}
+    h1{font-size:28px;line-height:1.15;margin:0 0 6px;font-weight:800;letter-spacing:.02em}
+    .sub{color:var(--muted);font-size:14px;line-height:1.55}
+    .card{background:rgba(23,32,51,.94);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:12px 0;backdrop-filter:blur(10px)}
+    label{display:block;font-size:14px;color:var(--muted);margin:2px 0 8px}
+    textarea{width:100%;min-height:160px;resize:vertical;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:#0b1223;color:var(--text);font-size:18px;line-height:1.55;padding:14px 14px;outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+    textarea:focus{border-color:rgba(90,167,255,.8);box-shadow:0 0 0 4px rgba(90,167,255,.16)}
+    .row{display:flex;gap:10px;align-items:center;margin-top:10px}.row>*{flex:1}.row .small{flex:.8}.row .tiny{flex:.55}
+    button{appearance:none;border:0;border-radius:18px;padding:15px 13px;min-height:54px;background:var(--panel2);color:var(--text);font-size:16px;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,.2);cursor:pointer}
+    button:active{transform:translateY(1px);filter:brightness(1.08)}
+    .primary{background:linear-gradient(135deg,#3d8cff,#5aa7ff);color:#fff}.copy{background:linear-gradient(135deg,#2a8b6d,#64d2a6);color:#06170f}.mic{font-size:24px}.danger{background:rgba(255,114,114,.16);color:#ffd4d4;border:1px solid rgba(255,114,114,.35)}
+    .ghost{background:rgba(255,255,255,.075);border:1px solid var(--line);box-shadow:none}.status{font-size:13px;color:var(--muted);min-height:22px;margin-top:9px;line-height:1.5}.status.good{color:#9ff0cc}.status.warn{color:#ffd27a}.status.bad{color:#ffb0b0}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tools button:first-child{grid-column:1/3}.hint{font-size:13px;color:var(--muted);line-height:1.6;margin:8px 2px 0}
+    .history-head{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px}.history-head h2{font-size:18px;margin:0}.count{font-size:13px;color:var(--muted)}
+    .item{border-top:1px solid var(--line);padding:12px 0}.item:first-of-type{border-top:0}.q{font-size:15px;line-height:1.55;white-space:pre-wrap;margin-bottom:9px}.time{font-size:12px;color:var(--muted);margin-bottom:9px}.item-actions{display:flex;gap:8px}.item-actions button{min-height:42px;padding:10px 9px;border-radius:14px;font-size:14px;box-shadow:none}.empty{color:var(--muted);font-size:14px;line-height:1.7;padding:10px 2px}
+    .switch{display:flex;gap:8px;background:#0b1223;border:1px solid var(--line);border-radius:16px;padding:5px;margin-top:10px}.switch button{min-height:40px;padding:8px;border-radius:12px;background:transparent;box-shadow:none;color:var(--muted);font-size:14px}.switch button.on{background:rgba(90,167,255,.18);color:#dcecff}
+    footer{color:var(--muted);font-size:12px;line-height:1.6;padding:8px 4px 0;text-align:center}
+    @media (max-width:380px){h1{font-size:25px}textarea{font-size:17px}.tools{grid-template-columns:1fr}.tools button:first-child{grid-column:auto}.row{gap:8px}button{font-size:15px;padding-left:10px;padding-right:10px}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><h1>すぐ調べる</h1><div class="sub">入力して、必要なら整えて、Google検索へ。質問文はコピーしてChatGPTにも貼り付けできます。</div></header>
+
+    <section class="card">
+      <label for="question">質問・調べたいこと</label>
+      <textarea id="question" placeholder="例：インボイス制度で領収書に必要な項目を調べたい"></textarea>
+      <div class="row">
+        <button class="mic tiny" id="micBtn" type="button">🎙️</button>
+        <button class="ghost small" id="cleanBtn" type="button">文章を整える</button>
+        <button class="ghost tiny" id="clearBtn" type="button">消す</button>
+      </div>
+      <div id="status" class="status">音声入力後も、サーチボタンを押すまで検索しません。</div>
+    </section>
+
+    <section class="card">
+      <div class="tools">
+        <button class="primary" id="searchBtn" type="button">Googleで検索</button>
+        <button class="copy" id="copyBtn" type="button">質問文をコピー</button>
+        <button class="ghost" id="saveBtn" type="button">履歴に保存</button>
+      </div>
+      <div class="switch" aria-label="検索方法">
+        <button id="normalMode" class="on" type="button">通常検索</button>
+        <button id="exactMode" type="button">そのまま検索</button>
+      </div>
+      <p class="hint">通常検索は、余分な空白や語尾を少し整えて検索します。「そのまま検索」は入力文をなるべく変えません。</p>
+    </section>
+
+    <section class="card">
+      <div class="history-head"><h2>履歴</h2><span class="count" id="historyCount">0件</span></div>
+      <div id="historyList" class="empty">まだ履歴はありません。</div>
+      <div class="row"><button class="danger" id="deleteHistoryBtn" type="button">履歴をすべて削除</button></div>
+    </section>
+    <footer>端末内保存のみ。AI回答機能は入れていません。</footer>
+  </main>
+
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const q = $('question'), status = $('status'), historyList = $('historyList'), historyCount = $('historyCount');
+  const KEY = 'quick_search_work_history_v1';
+  let searchMode = 'normal';
+  let recognition = null, recognizing = false, finalTranscript = '';
+
+  function setStatus(msg, type){ status.textContent = msg; status.className = 'status ' + (type || ''); }
+  function normalizeText(text){ return (text || '').replace(/\u3000/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); }
+  function polish(text){
+    let s = normalizeText(text);
+    if(!s) return '';
+    s = s.replace(/^(えーと|えっと|あの|あのー|そのー|すみませんが|教えてください、?|調べてください、?)+/g,'');
+    s = s.replace(/[。！？!?]+$/,'');
+    s = normalizeText(s);
+    if(!/[？?]$/.test(s) && !/(とは|方法|理由|違い|必要|手順|確認|比較|一覧|意味|原因)$/.test(s)) s += ' について';
+    return s;
+  }
+  function getText(forSearch){ const raw = q.value; return forSearch && searchMode === 'normal' ? polish(raw) : normalizeText(raw); }
+  function loadHistory(){ try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]} }
+  function saveHistory(text){
+    text = normalizeText(text); if(!text) return;
+    let arr = loadHistory().filter(x => x && x.text !== text);
+    arr.unshift({text, date:new Date().toISOString()}); arr = arr.slice(0,50);
+    localStorage.setItem(KEY, JSON.stringify(arr)); renderHistory();
+  }
+  function formatDate(iso){ try{ const d = new Date(iso); return d.toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){return ''} }
+  function renderHistory(){
+    const arr = loadHistory(); historyCount.textContent = arr.length + '件';
+    if(!arr.length){ historyList.className='empty'; historyList.textContent='まだ履歴はありません。'; return; }
+    historyList.className=''; historyList.innerHTML='';
+    arr.forEach((item, index)=>{
+      const div = document.createElement('div'); div.className='item';
+      const time = document.createElement('div'); time.className='time'; time.textContent = formatDate(item.date);
+      const qt = document.createElement('div'); qt.className='q'; qt.textContent = item.text;
+      const acts = document.createElement('div'); acts.className='item-actions';
+      const use = document.createElement('button'); use.textContent='入力に戻す'; use.className='ghost'; use.onclick=()=>{q.value=item.text; q.focus(); setStatus('履歴から入力欄に戻しました。','good')};
+      const search = document.createElement('button'); search.textContent='再検索'; search.className='primary'; search.onclick=()=>{q.value=item.text; doSearch();};
+      const del = document.createElement('button'); del.textContent='削除'; del.className='danger'; del.onclick=()=>{ const a=loadHistory(); a.splice(index,1); localStorage.setItem(KEY,JSON.stringify(a)); renderHistory(); };
+      acts.append(use, search, del); div.append(time, qt, acts); historyList.appendChild(div);
+    });
+  }
+  function doSearch(){
+    const text = getText(true); if(!text){ setStatus('検索する内容を入力してください。','warn'); q.focus(); return; }
+    saveHistory(text); const url = 'https://www.google.com/search?q=' + encodeURIComponent(text);
+    window.open(url, '_blank', 'noopener'); setStatus('Google検索を開きました。履歴にも保存しました。','good');
+  }
+  async function copyText(){
+    const text = getText(false); if(!text){ setStatus('コピーする内容を入力してください。','warn'); return; }
+    try{ await navigator.clipboard.writeText(text); saveHistory(text); setStatus('コピーしました。ChatGPTなどに貼り付けできます。','good'); }
+    catch(e){ q.select(); document.execCommand('copy'); setStatus('コピーを試しました。うまくいかない場合は選択してコピーしてください。','warn'); }
+  }
+  function setupSpeech(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ setStatus('このSafariでは音声認識が使えない場合があります。キーボードのマイク入力は使えます。','warn'); return; }
+    recognition = new SR(); recognition.lang='ja-JP'; recognition.continuous=true; recognition.interimResults=true;
+    recognition.onstart=()=>{recognizing=true; finalTranscript=q.value ? q.value + '\n' : ''; $('micBtn').textContent='■ 停止'; setStatus('音声入力中です。停止しても、サーチボタンを押すまで検索しません。','good');};
+    recognition.onresult=(event)=>{ let interim=''; for(let i=event.resultIndex;i<event.results.length;i++){ const t=event.results[i][0].transcript; if(event.results[i].isFinal) finalTranscript += t; else interim += t; } q.value = normalizeText(finalTranscript + interim); };
+    recognition.onerror=(e)=>{ setStatus('音声入力でエラーが出ました。Safariのマイク許可を確認してください。','bad'); };
+    recognition.onend=()=>{ recognizing=false; $('micBtn').textContent='🎙️'; setStatus('音声入力を停止しました。必要なら手で修正してから検索してください。','good'); };
+  }
+
+  $('searchBtn').onclick = doSearch; $('copyBtn').onclick = copyText; $('saveBtn').onclick=()=>{ const t=getText(false); if(t){saveHistory(t); setStatus('履歴に保存しました。','good')}else setStatus('保存する内容を入力してください。','warn'); };
+  $('cleanBtn').onclick=()=>{ const t=polish(q.value); if(t){q.value=t; setStatus('検索しやすい文章に少し整えました。','good')}else setStatus('整える内容を入力してください。','warn'); };
+  $('clearBtn').onclick=()=>{q.value=''; q.focus(); setStatus('入力欄を空にしました。','');};
+  $('deleteHistoryBtn').onclick=()=>{ if(confirm('履歴をすべて削除しますか？')){ localStorage.removeItem(KEY); renderHistory(); setStatus('履歴を削除しました。','good'); } };
+  $('normalMode').onclick=()=>{searchMode='normal'; $('normalMode').classList.add('on'); $('exactMode').classList.remove('on');};
+  $('exactMode').onclick=()=>{searchMode='exact'; $('exactMode').classList.add('on'); $('normalMode').classList.remove('on');};
+  $('micBtn').onclick=()=>{ if(!recognition){setupSpeech(); if(!recognition) return;} try{ recognizing ? recognition.stop() : recognition.start(); }catch(e){ setStatus('音声入力を開始できませんでした。少し待って再度押してください。','warn'); } };
+
+  window.addEventListener('beforeinstallprompt', e => e.preventDefault());
+  renderHistory(); setupSpeech();
+})();
+</script>
+</body>
+</html>
