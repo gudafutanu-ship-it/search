@@ -98,7 +98,7 @@
       <button class="mainChat" id="chatgptBtn">ChatGPTへコピーして開く</button>
 
       <div class="notice">
-        ボタンを押すと質問文をコピーしてChatGPTを開きます。開いたら入力欄に貼り付けて送信してください。
+        ボタンを押すと質問文をコピーしてChatGPTを開きます。開いたら質問文が渡る方式に修正済みです。必要なら送信してください。
       </div>
 
       <div class="grid2">
@@ -209,8 +209,13 @@
   async function openChatGPT(text) {
     const ok = await copyText(text);
     saveHistory(text, "chatgpt");
-    setStatus(ok ? "コピーしました。ChatGPTを開きます。開いたら貼り付けて送信してください。" : "コピーできませんでした。ChatGPTを開きます。", ok ? "good" : "bad");
-    setTimeout(() => { window.location.href = "https://chatgpt.com/"; }, 300);
+    setStatus(ok ? "コピーしました。ChatGPTに質問文付きで移動します。" : "コピーできませんでした。ChatGPTを開きます。", ok ? "good" : "bad");
+
+    // ideaアプリと同じ方式。
+    // chatgpt.com のトップだけを開くと、iPhoneのPWA/Safari環境ではログイン画面に戻されることがあるため、
+    // 質問文を q= に入れて chat.openai.com 側で開く。
+    const url = "https://chat.openai.com/?q=" + encodeURIComponent(text);
+    setTimeout(() => { window.location.href = url; }, 300);
   }
 
   function renderHistory() {
